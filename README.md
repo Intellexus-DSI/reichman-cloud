@@ -39,23 +39,45 @@ To ensure performance and avoid cost spikes, follow this strictly:
 | **TOTAL** | **Billable Events** | **~4,000 Transactions** | **~4 Transactions** |
 
 <details>
-<summary><b>🔍 Deep Dive: Why does this happen? (Click to Expand)</b></summary>
+<summary><b>� Deep Dive: Technical Explanation & Pricing (Click to Expand)</b></summary>
 
-### The Technical Explanation
-In Azure Files, every interaction is considered a **"Transaction."** A single file copy isn't just one action, it is a conversation between the client and the server.
+### Azure Files Pricing Breakdown
 
-**Scenario A: Copying 1,000 files (Unzipped)**
-1.  **Create Handle:** "Hi Azure, I need to create `file1.txt`" (1 IOPS)
-2.  **Write Data:** "Here is the content for `file1.txt`" (1 IOPS)
-3.  **Update Attributes:** "Set the timestamp for `file1.txt`" (1 IOPS)
-4.  **Close Handle:** "I am done with `file1.txt`" (1 IOPS)
-    * *Result:* **~4,000+ IOPS used.** You hit your throttle limit immediately and pay for every interaction.
+#### 1. Storage (Data at Rest)
+This is the cost for simply keeping the files on the disk.
+* **Transaction Optimized:** `$0.06 / GB`.
+    * *Note:* Expensive for storage. Cost-effective only for workloads with extremely high read/write activity.
+* **Hot Tier (Recommended):** `$0.0255 / GB`.
+    * *Note:* Cheaper for storage, balanced operational costs. This is the standard tier.
 
-**Scenario B: Copying 1 Zip file**
-1.  **Create Handle:** "Hi Azure, I need to create `archive.zip`" (1 IOPS)
-2.  **Write Data:** "Here is the content..." (Streamed continuously, counts as fewer IOPS because it's sustained throughput).
-3.  **Close Handle:** "I am done." (1 IOPS)
-    * *Result:* **~10-50 IOPS used.** cost effective.
+#### 2. Operations (Pay-per-Action)
+In the **Hot Tier**, you pay for every 10,000 operations.
+
+| Operation Type | Cost (per 10,000 ops) | Activity |
+| :--- | :--- | :--- |
+| **Write & List** | **$0.065** | Uploading files, saving data, browsing folders (`ls`). |
+| **Read** | **$0.0052** | Downloading or reading file content. |
+| **Delete** | **$0.00 (Free)** | Removing files incurs no transaction cost. |
+
+### 🧮 Why does this matter? (The Hidden Cost of SMB)
+
+It is not just about the "Write" operation. The **SMB Protocol** (used by network drives) is "chatty."
+For every single file you copy, the computer and the server have a conversation requiring multiple **billable transactions**:
+
+1.  **Open Handle:** "I want to create this file" (1 Transaction)
+2.  **Write Data:** "Here is the data" (1 Transaction)
+3.  **Set Attributes:** "Set the creation date/time" (1 Transaction)
+4.  **Close Handle:** "I am finished" (1 Transaction)
+
+**The Math:**
+* **Copying 100,000 files:**
+    * 100,000 Writes + 300,000 Overhead operations = **400,000 Transactions**.
+    * Cost: ~$2.60 (vs expected $0.65).
+* **Copying 1 Zip file:**
+    * 1 Write + 3 Overhead operations = **4 Transactions**.
+    * Cost: ~$0.00.
+
+**Conclusion:** The protocol overhead triples your cost when handling many small files.
 
 </details>
 
