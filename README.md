@@ -10,13 +10,14 @@ Welcome to the Reichman University Cloud Environment. This guide outlines the cr
 All network-attached drives are **Azure Files** storage.
 * **Risk:** Running high-IOPS operations (heavy reading/writing) directly on these drives will cause significant high costs.
 * **Policy:** You must treat the network drive as **cold storage** only.
+  - nit: it's not a cold storage tho, it is either for cold storage or for shared storage between VMs
 
 ### 2. The Correct Workflow
 To ensure performance and avoid cost spikes, follow this strictly:
 1.  **Transfer:** Copy your model, scripts, and datasets from the Network Drive (FileShare) to the **Local Drive (C:)**.
-2.  **Execute:** Run your models and perform all data processing locally on the **C:** drive.
-3.  **Backup:** Once finished, copy your results back to the Network Drive for safe storage.
-
+2.  **Execute:** Run your models and perform all data processing locally on the machine storage. 
+3.  **Backup:** Once finished, copy your results back to the Network Drive for safe storage (only when needed for cold start or shared space)
+- nit - we never copy code, or scripts, theres github for this
 ---
 
 ## 💰 Optimizing Cost & Performance (Money Saving Tips)
