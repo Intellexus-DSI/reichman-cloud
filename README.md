@@ -19,25 +19,72 @@ To ensure performance and avoid cost spikes, follow this strictly:
 4.  **Backup:** Once finished, copy only essential results back to the Network Drive for retention or sharing.
 
 ---
-
 ## 💰 Optimizing Cost & Performance (Money Saving Tips)
 
 ### Rule #1: ZIP Your Files Before Uploading
 **Why?** In Azure, you pay for every single "transaction" (interaction with a file).
-* **Moving 1,000 small files** = 4,000+ transactions (Requires opening, writing, and closing every single file).
-* **Moving 1 Zip file** = ~4 transactions.
+* **The "Data Cost" is fixed:** Moving 10GB of data always generates ~10,000 "Write" transactions (because Azure splits data into 1MB chunks), whether it's one file or many.
+* **The "Overhead Cost" is variable:** This depends on the *count* of files. Moving 10,000 separate files generates **30,000+ extra** billable operations just to open, attribute, and close them.
 
-**✅ DO:** Compress your folders into a `.zip` or `.tar` archive before moving them to the cloud.
+**✅ DO:** Compress your folders into a `.zip` or `.tar.gz` archive before moving them to the cloud.  
 **❌ DON'T:** Upload folders containing thousands of small images or code files directly.
 
-#### 📊 Cost Comparison
-| Step | Operation | 1,000 Small Files ❌ | 1 Zip File ✅ |
+#### 📊 Cost Comparison (Example: 10GB Data)
+| Step | Operation | 10,000 Small Files (1MB each) ❌ | 1 Large Zip File (10GB) ✅ |
 | :--- | :--- | :--- | :--- |
-| **1** | Open/Create | 1,000 IOPS | 1 IOPS |
-| **2** | Transfer Data | 1,000+ IOPS | 1 IOPS (Streamed) |
-| **3** | Fix Date/Time | 1,000 IOPS | 1 IOPS |
-| **4** | Close Handle | 1,000 IOPS | 1 IOPS |
-| **TOTAL** | **Billable Events** | **~4,000 Transactions** | **~4 Transactions** |
+| **1** | **Overhead** (Open/Create) | 10,000 Transactions | **1 Transaction** |
+| **2** | **Overhead** (Set Metadata) | 10,000 Transactions | **1 Transaction** |
+| **3** | **Overhead** (Close File) | 10,000 Transactions | **1 Transaction** |
+| **4** | **Data Transfer** (Writes) | ~10,000 Writes (1 per file) | ~10,000 Writes (1 per 1MB chunk) |
+| **TOTAL** | **Billable Events** | **~40,000 Transactions** | **~10,003 Transactions** |
+| **RESULT** | **Efficiency** | 💸 **4x More Expensive** | 💰 **75% Cost Reduction** |
+
+<details>
+<summary>🛠️ How to Compress and Moving Files(Quick Tutorial)</summary>
+
+### 🛠️ How to Compress Files
+Use these commands to prepare your data before uploading to the network drive.
+
+#### Compress using Tar (recursive)
+This uses `pigz` to compress using all CPU cores (High Speed).
+```bash
+tar -I pigz -cf name.tar.gz folder_name
+```
+Extract
+```bash
+tar -I pigz -xf name.tar.gz
+```
+
+### 🚚 Moving Files: `mv` vs `rsync`
+
+When moving data to the network drive, you have two options.
+
+#### ❌ Option 1: The "Move" Command (Not Recommended for Large Files)
+The `mv` command moves the file and **automatically deletes** the source folder from your local machine once finished.
+
+* **Risk:** If the transfer fails (internet disconnect/VPN drop), you might lose data or end up with a corrupted file. There is no progress bar.
+
+```bash
+# Moves folder and deletes the original from local disk
+mv 64_08-12-2025_2203 /home/storage/orrz/
+```
+
+#### ✅ Option 2: The Rsync Command (Recommended)
+
+**rsync** copies the files safely. Unlike `mv`, it shows a progress bar and ensures the file is fully transferred before you manually delete the original.
+
+**Benefit:** If the connection drops, you can simply run the command again, and it will resume where it left off (if using the `-P` flag). You never risk losing data.
+
+```bash
+# 1. Copy safely
+rsync -ahP folder_name path_copy
+
+# 2. Verify the file is there, then delete locally
+rm -rf folder_Name
+```
+
+
+</details>
 
 <details>
 <summary><b>� Deep Dive: Technical Explanation & Pricing (Click to Expand)</b></summary>
