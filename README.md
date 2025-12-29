@@ -66,7 +66,7 @@ The `mv` command moves the file and **automatically deletes** the source folder 
 
 ```bash
 # Moves folder and deletes the original from local disk
-mv 64_08-12-2025_2203 /home/storage/orrz/
+mv folder_name path_location
 ```
 
 #### ✅ Option 2: The Rsync Command (Recommended)
@@ -82,7 +82,6 @@ rsync -ahP folder_name path_copy
 # 2. Verify the file is there, then delete locally
 rm -rf folder_Name
 ```
-
 
 </details>
 
@@ -107,25 +106,7 @@ In the **Hot Tier**, you pay for every 10,000 operations.
 | **Read** | **$0.0052** | Downloading or reading file content. |
 | **Delete** | **$0.00 (Free)** | Removing files incurs no transaction cost. |
 
-### 🧮 Why does this matter? (The Hidden Cost of SMB)
 
-It is not just about the "Write" operation. The **SMB Protocol** (used by network drives) is "chatty."
-For every single file you copy, the computer and the server have a conversation requiring multiple **billable transactions**:
-
-1.  **Open Handle:** "I want to create this file" (1 Transaction)
-2.  **Write Data:** "Here is the data" (1 Transaction)
-3.  **Set Attributes:** "Set the creation date/time" (1 Transaction)
-4.  **Close Handle:** "I am finished" (1 Transaction)
-
-**The Math:**
-* **Copying 100,000 files:**
-    * 100,000 Writes + 300,000 Overhead operations = **400,000 Transactions**.
-    * Cost: ~$2.60 (vs expected $0.65).
-* **Copying 1 Zip file:**
-    * 1 Write + 3 Overhead operations = **4 Transactions**.
-    * Cost: ~$0.00.
-
-**Conclusion:** The protocol overhead triples your cost when handling many small files.
 
 </details>
 
