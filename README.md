@@ -9,14 +9,14 @@ Welcome to the Reichman University Cloud Environment. This guide outlines the cr
 ### 1. DO NOT Run Models on Network Drives
 All network-attached drives are **Azure Files** storage.
 * **Risk:** Running high-IOPS operations (heavy reading/writing) directly on these drives will cause significant high costs.
-* **Policy:** Treat the network drive as **Shared Storage** (for backups and sharing data between VMs) rather than active workspace.
+* **Policy:** Treat the network drive as **Shared Storage** (sharing data between VMs) rather than active workspace.
 
 ### 2. The Correct Workflow
 To ensure performance and avoid cost spikes, follow this strictly:
 1.  **Setup:** Clone your code/scripts from **GitHub** (do not copy code manually).
 2.  **Transfer Data:** Copy only necessary datasets/models from the Network Drive to the **Local Machine Storage**.
 3.  **Execute:** Run your models and perform all data processing locally on the machine's local storage.
-4.  **Backup:** Once finished, copy only essential results back to the Network Drive for retention or sharing.
+4.  **Sharing:** Once finished, copy only the essential results back to the network drive if they need to be shared.
 
 ---
 ## 💰 Optimizing Cost & Performance (Money Saving Tips)
@@ -59,17 +59,17 @@ tar -I pigz -xf name.tar.gz
 
 When moving data to the network drive, you have two options.
 
-#### ❌ Option 1: The "Move" Command (Not Recommended for Large Files)
+#### Option 1: The "Move" Command (Not Recommended for Large Files)
 The `mv` command moves the file and **automatically deletes** the source folder from your local machine once finished.
 
 * **Risk:** If the transfer fails (internet disconnect/VPN drop), you might lose data or end up with a corrupted file. There is no progress bar.
 
 ```bash
 # Moves folder and deletes the original from local disk
-mv folder_name path_location
+mv name.tar.gz path_location
 ```
 
-#### ✅ Option 2: The Rsync Command (Recommended)
+#### Option 2: The Rsync Command (Recommended)
 
 **rsync** copies the files safely. Unlike `mv`, it shows a progress bar and ensures the file is fully transferred before you manually delete the original.
 
